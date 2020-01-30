@@ -1,0 +1,88 @@
+﻿using System;
+using System.IO;
+using System.Threading;
+using System.Net;
+
+
+namespace ConsoleApp1
+{
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            //getFile("accountbalances.txt", "Testing", "administrator", "Password1", "192.168.0.33");
+            sendHTTP();
+        }
+
+
+        public static void getFile(String filename, String path, String username, String password, String serverAddress)
+        {
+            new Thread(() =>
+            {
+                /*
+                Console.WriteLine("Downloading....");
+                FtpWebRequest request =
+                    (FtpWebRequest) WebRequest.Create("ftp://" + serverAddress + "/" + path + "/" + filename);
+                request.Credentials = new NetworkCredential(username, password);
+                request.Method = WebRequestMethods.Ftp.DownloadFile;
+
+                using (Stream ftpStream = request.GetResponse().GetResponseStream())
+
+                using (Stream fileStream = File.Create(@"" + filename))
+                {
+                    byte[] buffer = new byte[10240];
+                    int read;
+                    while ((read = ftpStream.Read(buffer, 0, buffer.Length)) > 0)
+                    {
+                        fileStream.Write(buffer, 0, read);
+                        Console.WriteLine("Downloaded {0} bytes", fileStream.Position);
+                    }
+                }*/
+                /*
+                FtpWebRequest deleteRequest =
+                    (FtpWebRequest) WebRequest.Create("ftp://" + serverAddress + "/" + path + "/" + filename);
+
+                deleteRequest.Credentials = new NetworkCredential(username, password);
+
+                deleteRequest.Method = WebRequestMethods.Ftp.DeleteFile;
+
+                using (FtpWebResponse deleteResponse = (FtpWebResponse) deleteRequest.GetResponse())
+                {
+                    Console.WriteLine(deleteResponse.StatusDescription);
+                }
+                */
+
+
+                readFile();
+
+            }).Start();
+        }
+
+        public static void readFile()
+        {
+            string[] lines = File.ReadAllLines("accountbalances.txt");
+            foreach (string line in lines)
+            {
+                String[] strlist = line.Split(',');
+                
+                String accountID = strlist[1];
+                String ledgerBalance = strlist[2];
+                String availableBalance = strlist[3];
+                
+                Console.WriteLine(accountID + " | " + ledgerBalance + " | " + availableBalance);
+                
+            }
+        }
+
+        public static void sendHTTP(String accountName, String ledgerBalance, String availableBalance)
+        {
+            //laravel route: . . . /{ accountNamw }/{ ledgerBalance }/{ availableBalance }
+            string url = "https://stackoverflow.com/questions/943852/how-to-send-an-https-get-request-in-c-sharp";
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
+            HttpWebResponse response = (HttpWebResponse)request.GetResponse();
+            Stream resStream = response.GetResponseStream();
+            Console.WriteLine(response.StatusDescription);
+        }
+        
+    }
+}
