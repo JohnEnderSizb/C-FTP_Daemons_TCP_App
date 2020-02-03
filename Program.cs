@@ -1,86 +1,83 @@
 ﻿using System;
 using System.IO;
-using System.Threading;
 using System.Net;
+using System.Net.Sockets;
+using System.Text;
 
+namespace ConsoleApp1 {
+  class Program
+  {
+    public static void Main()
+    { 
+      TcpListener server=null;   
+      try
+      {
+        // Set the TcpListener on port 13000.
+        Int32 port = 13000;
+        IPAddress localAddr = IPAddress.Parse("127.0.0.1");
+        
+        // TcpListener server = new TcpListener(port);
+        server = new TcpListener(localAddr, port);
 
-namespace ConsoleApp1
-{
-    class Program
-    {
-        static void Main(string[] args)
+        // Start listening for client requests.
+        server.Start();
+           
+        // Buffer for reading data
+        Byte[] bytes = new Byte[256];
+        String data = null;
+
+        // Enter the listening loop.
+        while(true) 
         {
-            
-            //ftp server variables
-            String serverAddress = "192.168.0.33";
-            String path = "Testing";
-            String filename = "accountbalances.txt";
-            String username = "administrator";
-            String password = "Password1";
+          Console.Write("Waiting for a connection... ");
+          
+          // Perform a blocking call to accept requests.
+          // You could also user server.AcceptSocket() here.
+          TcpClient client = server.AcceptTcpClient();            
+          Console.WriteLine("Connected!");
 
-            //update balance url
-            //String address = "";
+          data = null;
 
+          // Get a stream object for reading and writing
+          NetworkStream stream = client.GetStream();
 
-            //get the accountbalances.txt file from ftp server
-            Console.WriteLine("Downloading....");
-            FtpWebRequest request =
-                (FtpWebRequest) WebRequest.Create("ftp://" + serverAddress + "/" + path + "/" + filename);
-            request.Credentials = new NetworkCredential(username, password);
-            request.Method = WebRequestMethods.Ftp.DownloadFile;
+          int i;
 
-            using (Stream ftpStream = request.GetResponse().GetResponseStream())
+          // Loop to receive all the data sent by the client.
+          while((i = stream.Read(bytes, 0, bytes.Length))!=0) 
+          {   
+            UpdateBalances.updateBalances()
 
-            using (Stream fileStream = File.Create(@"" + filename))
-            {
-                byte[] buffer = new byte[10240];
-                int read;
-                while ((read = ftpStream.Read(buffer, 0, buffer.Length)) > 0)
-                {
-                    fileStream.Write(buffer, 0, read);
-                    Console.WriteLine("Downloaded {0} bytes", fileStream.Position);
-                }
-            }
+            // Translate data bytes to a ASCII string.
+            data = System.Text.Encoding.ASCII.GetString(bytes, 0, i);
+            Console.WriteLine("Received: {0}", data);
+         
+            // Process the data sent by the client.
+            data = data.ToUpper();
 
+            byte[] msg = System.Text.Encoding.ASCII.GetBytes(data);
 
-            //delete the accountbalances.txt file from server
-            FtpWebRequest deleteRequest =
-                (FtpWebRequest) WebRequest.Create("ftp://" + serverAddress + "/" + path + "/" + filename);
+            // Send back a response.
+            stream.Write(msg, 0, msg.Length);
+            Console.WriteLine("Response: {0}", data);            
+          }
+           
+          // Shutdown and end connection
+          client.Close();
+        }
+      }
+      catch(SocketException e)
+      {
+        Console.WriteLine("SocketException: {0}", e);
+      }
+      finally
+      {
+         // Stop listening for new clients.
+         server.Stop();
+      }
 
-            deleteRequest.Credentials = new NetworkCredential(username, password);
-
-            deleteRequest.Method = WebRequestMethods.Ftp.DeleteFile;
-
-            using (FtpWebResponse deleteResponse = (FtpWebResponse) deleteRequest.GetResponse())
-            {
-                Console.WriteLine(deleteResponse.StatusDescription);
-            }
-
-
-            //read contents of accountbalances.txt file and send make http het request for account update for each line
-            string[] lines = File.ReadAllLines("accountbalances.txt");
-            foreach (string line in lines)
-            {
-                String[] strlist = line.Split(',');
-
-                String accountName = strlist[1];
-                String ledgerBalance = strlist[2];
-                String availableBalance = strlist[3];
-
-                Console.WriteLine("Account Name: " + accountName +
-                                  ", Ledger Balance: " + ledgerBalance +
-                                  ", Available Balance: " + availableBalance);
-
-                ///send http get request
-                //laravel route: . . . /{ accountName }/{ ledgerBalance }/{ availableBalance }
-                string url = "https://stackdoverflow.com/questions/943852/how-to-send-an-https-get-request-in-c-sharp";
-                //string url = "http://127.0.0.1:8000/partial/edit/" + "/" + accountName + "/" + ledgerBalance + "/" + availableBalance;
-                HttpWebRequest getRequest = (HttpWebRequest) WebRequest.Create(url);
-                HttpWebResponse response = (HttpWebResponse) getRequest.GetResponse();
-                Stream resStream = response.GetResponseStream();
-                Console.WriteLine(response.StatusDescription);
-
-            }
-        }//main
-    }//class
-}//namespace
+      Console.WriteLine("\nHit enter to continue...");
+      Console.Read();
+    }   
+  }
+}

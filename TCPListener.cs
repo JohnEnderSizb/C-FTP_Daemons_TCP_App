@@ -57,7 +57,7 @@ namespace ConsoleApp1 {
 
             // Send back a response.
             stream.Write(msg, 0, msg.Length);
-            Console.WriteLine("The response", data);            
+            Console.WriteLine("Response: {0}", data);            
           }
            
           // Shutdown and end connection
