@@ -10,6 +10,7 @@ namespace ConsoleApp1
     {
         static void Main(string[] args)
         {
+            
             //ftp server variables
             String serverAddress = "192.168.0.33";
             String path = "Testing";
@@ -72,7 +73,7 @@ namespace ConsoleApp1
 
                 ///send http get request
                 //laravel route: . . . /{ accountName }/{ ledgerBalance }/{ availableBalance }
-                string url = "https://stackoverflow.com/questions/943852/how-to-send-an-https-get-request-in-c-sharp";
+                string url = "https://stackdoverflow.com/questions/943852/how-to-send-an-https-get-request-in-c-sharp";
                 //string url = "http://127.0.0.1:8000/partial/edit/" + "/" + accountName + "/" + ledgerBalance + "/" + availableBalance;
                 HttpWebRequest getRequest = (HttpWebRequest) WebRequest.Create(url);
                 HttpWebResponse response = (HttpWebResponse) getRequest.GetResponse();
